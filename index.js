@@ -1,26 +1,32 @@
 const express = require('express');
+const cors = require("cors");
 const app = express();
 const port = 3000;
 
 const { sequelize } = require('./connection');
-// const { NomTable } = require('./models');
+const { UserEndpoint } = require('./endpoints/UserEndpoint');
 
-app.get('/', (req, res)=>{
-    res.send('Hola');
-});
+
+app.use(express.json());
+app.use(cors());
+
+// Endpoints
+UserEndpoint(app);
+
 
 sequelize
-    .authenticate()
-    .then(()=>{
-        console.log('conexion BD ok');
-        return sequelize.sync();
-    })
-    .then(()=>{
-        app.listen(port, ()=>{
-            console.log('Servidor iniciado');
-        });
-    })
-    .catch(err=>{
-        console.log('error')
+  .authenticate()
+  .then(() => {
+    console.log("Connection success");
+    return sequelize.sync();
+  })
+  .then(() => {
+    console.log("Sync models");
+    app.listen(port, () => {
+      console.log(`Server listen on http://localhost:${port}`);
     });
+  })
+  .catch((error) => {
+    console.error("Connection fail", error);
+  });
 

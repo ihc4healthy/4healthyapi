@@ -7,14 +7,14 @@ const host = "localhost";
 const port = "5432";
 
 const sequelize = new Sequelize(
-    database, username, password, host, port,
+    database, username, password,
     {
         host: host,
         port: port,
-        dialect: 'postgres'
+        dialect: 'postgres',
     }
 );
 
 module.exports = {
-    sequelize
+    sequelize,
 };
