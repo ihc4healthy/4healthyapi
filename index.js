@@ -10,6 +10,7 @@ const { UserEndpoint } = require('./endpoints/UserEndpoint');
 app.use(express.json());
 app.use(cors());
 
+// Endpoints
 UserEndpoint(app);
 
 
