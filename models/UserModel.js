@@ -2,7 +2,7 @@ const {DataTypes} = require('sequelize');
 const {sequelize} = require('../connection');
 
 const User = sequelize.define('User', {
-    userName: {
+    username: {
         type: DataTypes.STRING,
         allowNull: true,
         unique: true,
@@ -26,7 +26,7 @@ const User = sequelize.define('User', {
             notEmpty: true,
         }
     },
-    userType: {
+    type: {
         type: DataTypes.ENUM('WORK', 'STUDIES', 'ANY'),
         defaultValue: 'ANY',
     },

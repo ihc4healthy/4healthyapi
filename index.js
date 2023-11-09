@@ -4,12 +4,14 @@ const app = express();
 const port = 3000;
 
 const { sequelize } = require('./connection');
-const { user } = require('./endpoints/User');
+const { UserEndpoint } = require('./endpoints/UserEndpoint');
+
 
 app.use(express.json());
 app.use(cors());
 
-user.post();
+UserEndpoint(app);
+
 
 sequelize
   .authenticate()
