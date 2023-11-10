@@ -67,6 +67,36 @@ UserEndpoint = (app) => {
             return printServerError(res, error);
         }
     });
+
+    // LOGIN: REVISANDO SI EXISTE EL USUARIO
+    app.post(name + '/login', async (req, res) => {
+        try {
+            const name = req.body?.name;
+            const password = req.body?.password;
+    
+            if (!name || !password) {
+                return printDataError(res, "user and/or password")
+            }
+    
+            const user = await User.findOne({
+                where:{
+                    username:name,
+                    password:password
+                }
+
+            });
+    
+            if (!user) {
+                return res.status(401).json({ message: "Usuario o contraseña Invalido" });
+            }
+    
+            return res.status(200).json({ user: user });
+    
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+    
 };
 
 
