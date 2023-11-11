@@ -77,11 +77,13 @@ UserEndpoint = (app) => {
             if (!name || !password) {
                 return printDataError(res, "user and/or password")
             }
+
+            const field = name.indexOf('@') >= 0 ? 'email' : 'username';
     
             const user = await User.findOne({
                 where:{
-                    username:name,
-                    password:password
+                    [field]:name,
+                    password: password
                 }
 
             });
