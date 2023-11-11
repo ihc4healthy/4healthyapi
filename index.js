@@ -5,6 +5,7 @@ const port = 3000;
 
 const { sequelize } = require('./connection');
 const { UserEndpoint } = require('./endpoints/UserEndpoint');
+const { GoalEndpoint } = require('./endpoints/GoalEndpoint');
 const { Solicitud } = require("./models");
 
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use(cors());
 
 // Endpoints
 UserEndpoint(app);
+GoalEndpoint(app);
 app.post("/solicitudes", async (req, res) => {
   try {
     const email = req.body?.email;

@@ -1,6 +1,5 @@
-const { User,Goal } = require('../models');
+const { User } = require('../models');
 const name = "/user";
-const namegoal="/goal";
 
 const printDataError = (res, data) => {
     return res
@@ -68,16 +67,6 @@ UserEndpoint = (app) => {
             return printServerError(res, error);
         }
     });
-    //GET
-    app.get(namegoal, async (req, res) => {
-        try {
-          const goals = await Goal.findAll();
-          return res.json({ goals });
-        } catch (error) {
-          console.log("Error", error);
-          return res.status(500).json({ message: "Internal server error" });
-        }
-      });
 
     // LOGIN: REVISANDO SI EXISTE EL USUARIO
     app.post(name + '/login', async (req, res) => {
