@@ -4,7 +4,6 @@ const {sequelize} = require('../connection');
 const Goal = sequelize.define('Goal', {
     name: {
         type: DataTypes.STRING,
-        allowNull : true,
         allowNull: false,
         unique: true,
 
