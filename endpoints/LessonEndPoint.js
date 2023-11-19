@@ -1,4 +1,4 @@
-const { Lesson } = require('../models');
+const { Lesson, User} = require('../models');
 const name = "/lesson";
 
 const printDataError = (res, data) => {
@@ -18,25 +18,26 @@ LessonEndpoint = (app) => {
    // CREATE
    app.post(name, async (req, res) => {
       try {
-         const username = req.body?.username;
+         const userId = req.body?.userId;
          const title = req.body?.title;
          const tag = req.body?.tag;
 
-         if (!username || !title || !tag) {
-            return printDataError(res, "username and/or title and/or tag")
+         if (!userId || !title || !tag) {
+            return printDataError(res, "userId and/or title and/or tag")
          }
          
          // Verificar si el usuario existe antes de crear la lección
          const existingUser = await User.findOne({
             where: {
-                  username: username,
+               id: userId,
             },
          });
+
          if (!existingUser) {
             return printDataError(res, "usuario no existe");
          }
          const save = await Lesson.create({
-            username: username,
+            userId: userId,
             title: title,
             tag: tag,
          });
@@ -66,9 +67,7 @@ LessonEndpoint = (app) => {
          return printServerError(res, error);
       }
    });
-   
 };
-
 
 module.exports = {
    LessonEndpoint
