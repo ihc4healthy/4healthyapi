@@ -18,6 +18,16 @@ const HabitGoal = sequelize.define('HabitGoal', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    progress: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 10,
+        validate: {
+            min: 0,
+            max: 100,
+            isInt: true,
+        }
+    },
 }, {tableName: 'habitGoals',
     indexes: [
         {

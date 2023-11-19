@@ -1,6 +1,9 @@
+const { Sequelize, Op } = require('sequelize');
 const { User, HabitGoal, Habit, Schedule } = require('../models');
 const { printDataError, printServerError } = require('../utils/printErrors');
+
 const name = "/habit";
+const nameCheck = name+"/check";
 
 const defaultAdvanced = {
     goal: {
@@ -85,6 +88,70 @@ HabitEndpoint = (app) => {
         }
     });
     
+    //GET TODAY HABITS
+    app.get(nameCheck, async (req, res) => {
+        try {
+            const userId = req?.query?.userId;
+            const todayDay = req?.query?.todayDay; // 1(lun) - 7(dom)
+
+            if (!userId || !todayDay) {
+                return printDataError(res, 'user id and/or week day');
+            }
+
+            let searchDay = Array(7).fill(null);
+            searchDay[todayDay-1] = true;
+
+            // id: number, done:false
+
+            const habitsCheck = await HabitGoal.findAll({
+                include: [
+                    {
+                        model: Habit,
+                        as: "habits",
+                        attributes: ["id", "name", "icon", "difficulty", "goalPercentage"],
+                        include: [
+                            {
+                                model: Schedule,
+                                as: "schedules",
+                                attributes: ["startTime", "duration", "days"],
+                                where: { days: { [Op.overlap]: searchDay }, },
+                            }
+                        ],
+                    },
+                ],
+                attributes: [
+                    "userId",
+                    ["id", "goalId"],
+                    ["name", "goalName"],
+                    ["description", "goalDescription"],
+                    ["progress", "goalProgress"],
+                    [Sequelize.col("habits.id"), "habitId"],
+                    [Sequelize.col("habits.name"), "habitName"],
+                    [Sequelize.col("habits.icon"), "habitIcon"],
+                    [Sequelize.col("habits.difficulty"), "difficulty"],
+                    [Sequelize.col("habits.goalPercentage"), "habitGoalPerc"],
+                    [Sequelize.col("habits.schedules.startTime"), "time"],
+                    [Sequelize.col("habits.schedules.duration"), "duration"],
+                    // [Sequelize.col("habits.schedules.days"), "days"],
+                ],
+                where: { userId: userId },
+                raw: true,
+                // nest: true,
+            });
+            return res.json({ habitsCheck });
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+    
+    //CHECK HABIT
+    app.post(nameCheck, async (req, res) => {
+        try {
+            
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
 };
 
 
