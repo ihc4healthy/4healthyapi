@@ -31,7 +31,7 @@ const User = sequelize.define('User', {
         defaultValue: 'ANY',
     },
     profilePic: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.SMALLINT,
         validate: {
             min: 0,
             max: 2,
