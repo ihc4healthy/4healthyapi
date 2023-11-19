@@ -9,6 +9,7 @@ const { GoalEndpoint } = require('./endpoints/GoalEndpoint');
 const { SolicitudEndpoint } = require('./endpoints/SolicitudEndpoint');
 const { LessonEndpoint } = require('./endpoints/LessonEndPoint');
 const { HabitEndpoint } = require('./endpoints/HabitEndpoint');
+const { HabitsEndPoint } = require('./endpoints/HabitsEndPoint');
 
 app.use(express.json());
 app.use(cors());
@@ -19,6 +20,7 @@ GoalEndpoint(app);
 SolicitudEndpoint(app);
 LessonEndpoint(app);
 HabitEndpoint(app);
+HabitsEndPoint(app);
 
 
 sequelize

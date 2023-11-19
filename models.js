@@ -5,6 +5,7 @@ const { Lesson } = require("./models/lessonModel")
 const { Habit } = require("./models/HabitModel")
 const { HabitGoal } = require("./models/HabitGoalModel")
 const { Schedule } = require("./models/ScheduleModel")
+const { CatHabits, Habits} = require("./models/habitsModel");
 
 module.exports = {
     User,
@@ -14,4 +15,7 @@ module.exports = {
     HabitGoal,
     Habit,
     Schedule,
+    Lesson,   
+    CatHabits,
+    Habits
 };
