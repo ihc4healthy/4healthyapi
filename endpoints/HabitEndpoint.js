@@ -1,5 +1,5 @@
 const { Sequelize, Op } = require('sequelize');
-const { User, HabitGoal, Habit, Schedule } = require('../models');
+const { HabitGoal, Habit, Schedule, ScheduleDone } = require('../models');
 const { printDataError, printServerError } = require('../utils/printErrors');
 
 const name = "/habit";
@@ -88,35 +88,83 @@ HabitEndpoint = (app) => {
         }
     });
     
+    //GET ALL HABITS
+    app.get(name, async (req, res) => {
+        try {
+            const userId = req?.query?.userId;
+            const habits = await HabitGoal.findAll({
+                include: [
+                    {
+                        model: Habit,
+                        as: "habits",
+                        attributes: [],
+                    }
+                ],
+                attributes: [
+                    "userId",
+                    ["id", "goalId"],
+                    ["name", "goalName"],
+                    ["description", "goalDescription"],
+                    ["progress", "goalProgress"],
+                    [Sequelize.col('habits.id'), "id"],
+                    [Sequelize.col('habits.name'), "name"],
+                    [Sequelize.col('habits.icon'), "icon"],
+                    [Sequelize.col('habits.difficulty'), "difficulty"],
+                    [Sequelize.col('habits.goalPercentage'), "goalPerc"],
+                    [Sequelize.col('habits.reminders'), "reminders"],
+                ],
+                where: { userId: userId },
+            });
+            return res.json({ habits });
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+
     //GET TODAY HABITS
     app.get(nameCheck, async (req, res) => {
         try {
             const userId = req?.query?.userId;
             const todayDay = req?.query?.todayDay; // 1(lun) - 7(dom)
+            const todayDate = req?.query?.today; // aaaa-mm-dd
 
-            if (!userId || !todayDay) {
-                return printDataError(res, 'user id and/or week day');
+            if (!userId || !todayDay || !todayDate) {
+                return printDataError(res, 'user id, week day, and/or today');
             }
 
+            const today = {
+                start: new Date(todayDate).setHours(0,0,0,0),
+                end: new Date(todayDate).setHours(23, 59, 59, 999),
+            }
             let searchDay = Array(7).fill(null);
             searchDay[todayDay-1] = true;
-
-            // id: number, done:false
+            console.log(todayDay, searchDay);
 
             const habitsCheck = await HabitGoal.findAll({
                 include: [
                     {
                         model: Habit,
                         as: "habits",
-                        attributes: ["id", "name", "icon", "difficulty", "goalPercentage"],
-                        include: [
-                            {
-                                model: Schedule,
-                                as: "schedules",
-                                attributes: ["startTime", "duration", "days"],
-                                where: { days: { [Op.overlap]: searchDay }, },
-                            }
-                        ],
+                        attributes: [], //"id", "name", "icon", "difficulty", "goalPercentage"
+                        include: [{
+                            model: Schedule,
+                            as: "schedules",
+                            attributes: [], //"startTime", "duration", "days"
+                            where: Sequelize.literal(`days[${todayDay}] = true`),
+                            include: [{
+                                model: ScheduleDone,
+                                as: "schedulesDone",
+                                attributes: [],
+                                where: {
+                                    createdAt: {
+                                        [Op.gt]: today.start,
+                                        [Op.lt]: today.end,
+                                    }
+                                },
+                                required: false,
+                            }],
+                        }],
+                        required: true,
                     },
                 ],
                 attributes: [
@@ -125,13 +173,16 @@ HabitEndpoint = (app) => {
                     ["name", "goalName"],
                     ["description", "goalDescription"],
                     ["progress", "goalProgress"],
-                    [Sequelize.col("habits.id"), "habitId"],
-                    [Sequelize.col("habits.name"), "habitName"],
-                    [Sequelize.col("habits.icon"), "habitIcon"],
-                    [Sequelize.col("habits.difficulty"), "difficulty"],
-                    [Sequelize.col("habits.goalPercentage"), "habitGoalPerc"],
-                    [Sequelize.col("habits.schedules.startTime"), "time"],
-                    [Sequelize.col("habits.schedules.duration"), "duration"],
+                    [Sequelize.col('habits.id'), "habitId"],
+                    [Sequelize.col('habits.name'), "habitName"],
+                    [Sequelize.col('habits.icon'), "habitIcon"],
+                    [Sequelize.col('habits.difficulty'), "difficulty"],
+                    [Sequelize.col('habits.goalPercentage'), "habitGoalPerc"],
+                    [Sequelize.col('habits.schedules.id'), "scheduleId"],
+                    [Sequelize.col('habits.schedules.startTime'), "time"],
+                    [Sequelize.col('habits.schedules.duration'), "duration"],
+                    [Sequelize.col('habits.schedules.schedulesDone.scheduleId'), "doneId"],
+                    [Sequelize.col('habits.schedules.schedulesDone.day'), "doneDay"],
                     // [Sequelize.col("habits.schedules.days"), "days"],
                 ],
                 where: { userId: userId },
