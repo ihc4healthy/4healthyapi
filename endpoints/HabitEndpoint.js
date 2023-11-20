@@ -204,7 +204,25 @@ HabitEndpoint = (app) => {
                 doneAt: todayDate,
                 day: todayDay,
             });
-            return res.status(201).json({ scheduleDone: save });
+
+            const habitGoal = await HabitGoal.findOne({
+                include: [{
+                    model: Habit,
+                    as: 'habits',
+                    include: [{
+                        model: Schedule,
+                        as: 'schedules',
+                        attributes: [],
+                        where: { id: scheduleId },
+                    },],
+                },],
+            });
+            const habitGoalUpd = await HabitGoal.update({
+                progress: habitGoal.dataValues.progress + habitGoal.dataValues.habits[0]?.goalPercentage,
+            }, {where: {id: habitGoal.dataValues.id}});
+            // console.log('\n',habitGoalUpd.dataValues.progress,'\n');
+
+            return res.status(201).json({ scheduleDone: save, habitGoalUpd: habitGoalUpd });
             
         } catch (error) {
             return printServerError(res, error);
@@ -227,7 +245,25 @@ HabitEndpoint = (app) => {
                     doneAt: date,
                 }
             });
-            return res.status(201).json({ scheduleUnDone: save });
+
+            const habitGoal = await HabitGoal.findOne({
+                include: [{
+                    model: Habit,
+                    as: 'habits',
+                    include: [{
+                        model: Schedule,
+                        as: 'schedules',
+                        attributes: [],
+                        where: { id: scheduleId },
+                    },],
+                },],
+            });
+            const habitGoalUpd = await HabitGoal.update({
+                progress: habitGoal.dataValues.progress - habitGoal.dataValues.habits[0]?.goalPercentage,
+            }, {where: {id: habitGoal.dataValues.id}});
+            // console.log('\n',habitGoalUpd.dataValues.progress,'\n');
+
+            return res.status(201).json({ scheduleUnDone: save, habitGoalUpd: habitGoalUpd });
             
         } catch (error) {
             return printServerError(res, error);
