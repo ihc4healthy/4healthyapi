@@ -37,7 +37,22 @@ const User = sequelize.define('User', {
             max: 2,
         },
         defaultValue: 1,
-    }
+    },
+    level: {
+        type: DataTypes.SMALLINT,
+        validate: {
+            min: 0,
+        },
+        defaultValue: 0,
+    },
+    levelProgress: {
+        type: DataTypes.SMALLINT,
+        validate: {
+            min: 0,
+            max: 100,
+        },
+        defaultValue: 0,
+    },
 }, {tableName: 'users'});
 
 module.exports = {

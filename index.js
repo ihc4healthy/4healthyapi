@@ -22,6 +22,7 @@ HabitEndpoint(app);
 
 
 sequelize
+  // .sync({ force: true })
   .authenticate()
   .then(() => {
     console.log("Connection success");
