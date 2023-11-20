@@ -89,7 +89,7 @@ HabitEndpoint = (app) => {
     });
     
     //GET ALL HABITS
-    app.get(name, async (req, res) => {
+    app.get(name+'s', async (req, res) => {
         try {
             const userId = req?.query?.userId;
             const habits = await HabitGoal.findAll({
@@ -131,14 +131,7 @@ HabitEndpoint = (app) => {
             if (!userId || !todayDay || !todayDate) {
                 return printDataError(res, 'user id, week day, and/or today');
             }
-
-            const today = {
-                start: new Date(todayDate).setHours(0,0,0,0),
-                end: new Date(todayDate).setHours(23, 59, 59, 999),
-            }
-            let searchDay = Array(7).fill(null);
-            searchDay[todayDay-1] = true;
-            console.log(todayDay, searchDay);
+            // console.log(todayDate);
 
             const habitsCheck = await HabitGoal.findAll({
                 include: [
@@ -156,9 +149,8 @@ HabitEndpoint = (app) => {
                                 as: "schedulesDone",
                                 attributes: [],
                                 where: {
-                                    createdAt: {
-                                        [Op.gt]: today.start,
-                                        [Op.lt]: today.end,
+                                    doneAt: {
+                                        [Op.eq]: todayDate,
                                     }
                                 },
                                 required: false,
@@ -182,6 +174,7 @@ HabitEndpoint = (app) => {
                     [Sequelize.col('habits.schedules.startTime'), "time"],
                     [Sequelize.col('habits.schedules.duration'), "duration"],
                     [Sequelize.col('habits.schedules.schedulesDone.scheduleId'), "doneId"],
+                    [Sequelize.col('habits.schedules.schedulesDone.doneAt'), "doneAt"],
                     [Sequelize.col('habits.schedules.schedulesDone.day'), "doneDay"],
                     // [Sequelize.col("habits.schedules.days"), "days"],
                 ],
@@ -198,6 +191,43 @@ HabitEndpoint = (app) => {
     //CHECK HABIT
     app.post(nameCheck, async (req, res) => {
         try {
+            const scheduleId = req.body?.scheduleId;
+            const todayDate = req?.body?.today; // aaaa-mm-dd
+            const todayDay = req.body?.todayDay;
+            
+            if (!scheduleId || !todayDay || !todayDate) {
+                return printDataError(res, 'schedule id, date, and/or week day');
+            }
+            
+            const save = await ScheduleDone.create({
+                scheduleId: scheduleId,
+                doneAt: todayDate,
+                day: todayDay,
+            });
+            return res.status(201).json({ scheduleDone: save });
+            
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+    
+    //UNCHECK HABIT
+    app.delete(nameCheck, async (req, res) => {
+        try {
+            const scheduleId = req.query?.scheduleId;
+            const date = req.query?.date;
+            
+            if (!scheduleId || !date) {
+                return printDataError(res, 'schedule id and/or date');
+            }
+            
+            const save = await ScheduleDone.destroy({
+                where: {
+                    scheduleId: scheduleId,
+                    doneAt: date,
+                }
+            });
+            return res.status(201).json({ scheduleUnDone: save });
             
         } catch (error) {
             return printServerError(res, error);

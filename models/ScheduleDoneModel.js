@@ -8,17 +8,23 @@ const ScheduleDone = sequelize.define('ScheduleDone', {
         allowNull: false,
         primaryKey: true,
     },
+    doneAt: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        primaryKey: true,
+        validate: {
+            isDate: true,
+        }
+    },
     day: {
         type: DataTypes.SMALLINT,
         allowNull: false,
-        primaryKey: true,
         validate: {
             min: 1,
             max: 7,
             isInt: true,
         }
     },
-    //createdAt by default
 }, {tableName: 'schedulesDone'});
 
 Schedule.hasMany(ScheduleDone, {as: "schedulesDone", foreignKey:"scheduleId"});
