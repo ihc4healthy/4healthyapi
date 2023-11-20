@@ -1,6 +1,9 @@
-const { User, HabitGoal, Habit, Schedule } = require('../models');
+const { Sequelize, Op } = require('sequelize');
+const { HabitGoal, Habit, Schedule, ScheduleDone } = require('../models');
 const { printDataError, printServerError } = require('../utils/printErrors');
+
 const name = "/habit";
+const nameCheck = name+"/check";
 
 const defaultAdvanced = {
     goal: {
@@ -85,6 +88,187 @@ HabitEndpoint = (app) => {
         }
     });
     
+    //GET ALL HABITS
+    app.get(name+'s', async (req, res) => {
+        try {
+            const userId = req?.query?.userId;
+            const habits = await HabitGoal.findAll({
+                include: [
+                    {
+                        model: Habit,
+                        as: "habits",
+                        attributes: [],
+                    }
+                ],
+                attributes: [
+                    "userId",
+                    ["id", "goalId"],
+                    ["name", "goalName"],
+                    ["description", "goalDescription"],
+                    ["progress", "goalProgress"],
+                    [Sequelize.col('habits.id'), "id"],
+                    [Sequelize.col('habits.name'), "name"],
+                    [Sequelize.col('habits.icon'), "icon"],
+                    [Sequelize.col('habits.difficulty'), "difficulty"],
+                    [Sequelize.col('habits.goalPercentage'), "goalPerc"],
+                    [Sequelize.col('habits.reminders'), "reminders"],
+                ],
+                where: { userId: userId },
+            });
+            return res.json({ habits });
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+
+    //GET TODAY HABITS
+    app.get(nameCheck, async (req, res) => {
+        try {
+            const userId = req?.query?.userId;
+            const todayDay = req?.query?.todayDay; // 1(lun) - 7(dom)
+            const todayDate = req?.query?.today; // aaaa-mm-dd
+
+            if (!userId || !todayDay || !todayDate) {
+                return printDataError(res, 'user id, week day, and/or today');
+            }
+            // console.log(todayDate);
+
+            const habitsCheck = await HabitGoal.findAll({
+                include: [
+                    {
+                        model: Habit,
+                        as: "habits",
+                        attributes: [], //"id", "name", "icon", "difficulty", "goalPercentage"
+                        include: [{
+                            model: Schedule,
+                            as: "schedules",
+                            attributes: [], //"startTime", "duration", "days"
+                            where: Sequelize.literal(`days[${todayDay}] = true`),
+                            include: [{
+                                model: ScheduleDone,
+                                as: "schedulesDone",
+                                attributes: [],
+                                where: {
+                                    doneAt: {
+                                        [Op.eq]: todayDate,
+                                    }
+                                },
+                                required: false,
+                            }],
+                        }],
+                        required: true,
+                    },
+                ],
+                attributes: [
+                    "userId",
+                    ["id", "goalId"],
+                    ["name", "goalName"],
+                    ["description", "goalDescription"],
+                    ["progress", "goalProgress"],
+                    [Sequelize.col('habits.id'), "habitId"],
+                    [Sequelize.col('habits.name'), "habitName"],
+                    [Sequelize.col('habits.icon'), "habitIcon"],
+                    [Sequelize.col('habits.difficulty'), "difficulty"],
+                    [Sequelize.col('habits.goalPercentage'), "habitGoalPerc"],
+                    [Sequelize.col('habits.schedules.id'), "scheduleId"],
+                    [Sequelize.col('habits.schedules.startTime'), "time"],
+                    [Sequelize.col('habits.schedules.duration'), "duration"],
+                    [Sequelize.col('habits.schedules.schedulesDone.scheduleId'), "doneId"],
+                    [Sequelize.col('habits.schedules.schedulesDone.doneAt'), "doneAt"],
+                    [Sequelize.col('habits.schedules.schedulesDone.day'), "doneDay"],
+                    // [Sequelize.col("habits.schedules.days"), "days"],
+                ],
+                where: { userId: userId },
+                raw: true,
+                // nest: true,
+            });
+            return res.json({ habitsCheck });
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+    
+    //CHECK HABIT
+    app.post(nameCheck, async (req, res) => {
+        try {
+            const scheduleId = req.body?.scheduleId;
+            const todayDate = req?.body?.today; // aaaa-mm-dd
+            const todayDay = req.body?.todayDay;
+            
+            if (!scheduleId || !todayDay || !todayDate) {
+                return printDataError(res, 'schedule id, date, and/or week day');
+            }
+            
+            const save = await ScheduleDone.create({
+                scheduleId: scheduleId,
+                doneAt: todayDate,
+                day: todayDay,
+            });
+
+            const habitGoal = await HabitGoal.findOne({
+                include: [{
+                    model: Habit,
+                    as: 'habits',
+                    include: [{
+                        model: Schedule,
+                        as: 'schedules',
+                        attributes: [],
+                        where: { id: scheduleId },
+                    },],
+                },],
+            });
+            const habitGoalUpd = await HabitGoal.update({
+                progress: habitGoal.dataValues.progress + habitGoal.dataValues.habits[0]?.goalPercentage,
+            }, {where: {id: habitGoal.dataValues.id}});
+            // console.log('\n',habitGoalUpd.dataValues.progress,'\n');
+
+            return res.status(201).json({ scheduleDone: save, habitGoalUpd: habitGoalUpd });
+            
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
+    
+    //UNCHECK HABIT
+    app.delete(nameCheck, async (req, res) => {
+        try {
+            const scheduleId = req.query?.scheduleId;
+            const date = req.query?.date;
+            
+            if (!scheduleId || !date) {
+                return printDataError(res, 'schedule id and/or date');
+            }
+            
+            const save = await ScheduleDone.destroy({
+                where: {
+                    scheduleId: scheduleId,
+                    doneAt: date,
+                }
+            });
+
+            const habitGoal = await HabitGoal.findOne({
+                include: [{
+                    model: Habit,
+                    as: 'habits',
+                    include: [{
+                        model: Schedule,
+                        as: 'schedules',
+                        attributes: [],
+                        where: { id: scheduleId },
+                    },],
+                },],
+            });
+            const habitGoalUpd = await HabitGoal.update({
+                progress: habitGoal.dataValues.progress - habitGoal.dataValues.habits[0]?.goalPercentage,
+            }, {where: {id: habitGoal.dataValues.id}});
+            // console.log('\n',habitGoalUpd.dataValues.progress,'\n');
+
+            return res.status(201).json({ scheduleUnDone: save, habitGoalUpd: habitGoalUpd });
+            
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
 };
 
 

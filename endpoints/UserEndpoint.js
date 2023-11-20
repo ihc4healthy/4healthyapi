@@ -73,7 +73,6 @@ UserEndpoint = (app) => {
                     [field]:name,
                     password: password
                 }
-
             });
     
             if (!user) {

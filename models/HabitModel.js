@@ -35,6 +35,11 @@ const Habit = sequelize.define('Habit', {
         type: DataTypes.SMALLINT,
         allowNull: false,
         defaultValue: 10,
+        validate: {
+            min: 1,
+            max: 100,
+            isInt: true,
+        }
     },
 }, {tableName: 'habits',
     indexes: [
