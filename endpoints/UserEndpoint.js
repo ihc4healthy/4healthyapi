@@ -1,3 +1,4 @@
+const { json } = require('express');
 const { User } = require('../models');
 const { printDataError, printServerError } = require('../utils/printErrors');
 const name = "/user";
@@ -85,6 +86,55 @@ UserEndpoint = (app) => {
             return printServerError(res, error);
         }
     });
+
+
+ //cambiar contraseña
+    app.put('/updatepassword', async (req, res) => {
+        try{
+        const body=req.body; 
+        await User.update({
+            password: body.password,
+         }, { where: { id: body.id }, });
+        return res.status(200).json({ message: "Password updated successfully", user: body.User });
+    }
+    catch(error){
+        console.error("Error", error);
+          return res.status(500).json({ message: "Internal server error" });
+    }
+    
+    });
+
+    app.put('/updateuser', async (req, res) => {
+        try{
+        const body=req.body; 
+        await User.update({
+            username: body.username,
+         }, { where: { id: body.id }, });
+        return res.status(200).json({ message: "username updated successfully", user: body.User });
+    }
+    catch(error){
+        console.error("Error", error);
+          return res.status(500).json({ message: "Internal server error" });
+    }
+    
+    });
+
+    app.put('/updateemail', async (req, res) => {
+        try{
+        const body=req.body; 
+        await User.update({
+            email: body.email,
+         }, { where: { id: body.id }, });
+        return res.status(200).json({ message: "email updated successfully", user: body.User });
+    }
+    catch(error){
+        console.error("Error", error);
+          return res.status(500).json({ message: "Internal server error" });
+    }
+    
+    });
+
+
     
 };
 
