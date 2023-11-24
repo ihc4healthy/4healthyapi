@@ -4,6 +4,7 @@ const database = "dt_4healthy";
 const username = "postgres";
 const password = "admin123Admin";
 // const password = "Americ@2022_1";
+// const password = "1234";
 const host = "localhost";
 const port = "5432";
 
