@@ -93,6 +93,7 @@ HabitEndpoint = (app) => {
         try {
             const userId = req?.query?.userId;
             const habits = await HabitGoal.findAll({
+                
                 include: [
                     {
                         model: Habit,
