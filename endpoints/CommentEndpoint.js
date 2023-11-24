@@ -26,6 +26,18 @@ CommentEndpoint = (app) => {
             return res.status(500).json({message:"error interno de servidor"})
         }
     })
+
+    app.get(commi, async (req, res) => {
+        try {
+            // Obtener todos los comentarios desde la base de datos
+            const comments = await Comment.findAll();
+
+            return res.json({ comments });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Error interno de servidor" });
+        }
+    });
 };
 
 module.exports = {
