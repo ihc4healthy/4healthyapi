@@ -37,7 +37,19 @@ const User = sequelize.define('User', {
             max: 2,
         },
         defaultValue: 1,
-    }
+    },
+    socialemail: {
+        type: DataTypes.STRING,
+        allowNull : true,
+        unique: true,
+        validate: {
+            isEmail: true,
+        }
+    },
+    socialpassword: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {tableName: 'users'});
 
 module.exports = {

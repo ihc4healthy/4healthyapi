@@ -134,7 +134,31 @@ UserEndpoint = (app) => {
     
     });
 
+    //Datos de cuenta a vincular
+    app.patch(name+'/social', async (req, res) => {
+        try {
+            const id = req.body?.id;
+            const email = req.body?.email;
+            const password = req.body?.password;
+            
+            // 'WORK', 'STUDIES', 'ANY'
+            if (!id) {
+                return printDataError(res, "user")
+            }
+            if (!email || !password) {
+                return printDataError(res, "user social email and password")
+            }
+            
+            const save = await User.update({
+                socialemail: email,
+                socialpassword: password,
+            }, { where: { id: id }, });
+            return res.status(201).json({ user: save });
 
+        } catch (error) {
+            return printServerError(res, error);
+        }
+    });
     
 };
 
